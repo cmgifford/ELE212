@@ -1,15 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { NextActionCard } from '@/components/dashboard/NextActionCard';
 import { AssignmentCard } from '@/components/dashboard/AssignmentCard';
 import { StatsSummary } from '@/components/dashboard/StatsSummary';
 import { useAssignments } from '@/hooks/useAssignments';
 import { getTopRecommendation } from '@/lib/ai/behaviors';
-import { AlertCircle, Calendar, Clock } from 'lucide-react';
+import { AlertCircle, Calendar, Clock, ChevronDown } from 'lucide-react';
 
 export default function DashboardPage() {
   const { assignments } = useAssignments();
+  const [showAllOverdue, setShowAllOverdue] = useState(false);
+  const OVERDUE_PREVIEW = 3;
 
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
@@ -58,8 +61,19 @@ export default function DashboardPage() {
             <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">{overdue.length}</span>
           </div>
           <div className="space-y-2">
-            {overdue.map(a => <AssignmentCard key={a.id} assignment={a} compact />)}
+            {(showAllOverdue ? overdue : overdue.slice(-OVERDUE_PREVIEW)).map(a =>
+              <AssignmentCard key={a.id} assignment={a} compact />
+            )}
           </div>
+          {overdue.length > OVERDUE_PREVIEW && (
+            <button
+              onClick={() => setShowAllOverdue(v => !v)}
+              className="mt-2 flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors"
+            >
+              <ChevronDown size={13} className={showAllOverdue ? 'rotate-180 transition-transform' : 'transition-transform'} />
+              {showAllOverdue ? 'Show less' : `Show all ${overdue.length} overdue`}
+            </button>
+          )}
         </section>
       )}
 

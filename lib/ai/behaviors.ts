@@ -127,25 +127,34 @@ import type { Assignment } from '../data/types';
 export function getTopRecommendation(assignments: Assignment[]): Assignment | null {
   if (assignments.length === 0) return null;
 
-  // Priority: overdue first, then soonest due
   const actionable = assignments.filter(a =>
     a.status === 'overdue' || a.status === 'in_progress' || a.status === 'upcoming'
   );
 
   if (actionable.length === 0) return null;
 
-  // Overdue wins
-  const overdue = actionable.filter(a => a.status === 'overdue');
-  if (overdue.length > 0) return overdue[0];
-
-  // In progress second
-  const inProgress = actionable.filter(a => a.status === 'in_progress');
-  if (inProgress.length > 0) return inProgress[0];
-
-  // Soonest due
-  return actionable.sort((a, b) => {
+  const byDate = (a: Assignment, b: Assignment) => {
     if (!a.due_date) return 1;
     if (!b.due_date) return -1;
     return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-  })[0];
+  };
+
+  // In progress: most urgent first
+  const inProgress = actionable.filter(a => a.status === 'in_progress').sort(byDate);
+  if (inProgress.length > 0) return inProgress[0];
+
+  // Upcoming within 7 days: soonest first
+  const now = Date.now();
+  const soon = actionable
+    .filter(a => a.status === 'upcoming' && a.due_date)
+    .filter(a => new Date(a.due_date!).getTime() - now < 7 * 24 * 60 * 60 * 1000)
+    .sort(byDate);
+  if (soon.length > 0) return soon[0];
+
+  // Most recently overdue (closest past due date, not the oldest)
+  const overdue = actionable.filter(a => a.status === 'overdue').sort(byDate).reverse();
+  if (overdue.length > 0) return overdue[0];
+
+  // Fallback: soonest upcoming
+  return actionable.sort(byDate)[0];
 }
