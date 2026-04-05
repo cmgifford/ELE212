@@ -1,46 +1,38 @@
+'use client';
+
 import { Header } from '@/components/layout/Header';
 import { AssignmentCard } from '@/components/dashboard/AssignmentCard';
-import { getAllAssignments } from '@/lib/db/queries';
-import type { Assignment, AssignmentType } from '@/lib/db/queries';
+import { useAssignments } from '@/hooks/useAssignments';
+import type { Assignment, AssignmentType } from '@/lib/data/types';
 
-export const dynamic = 'force-dynamic';
-
-const TYPE_ORDER: AssignmentType[] = ['homework', 'exercise', 'extra_credit', 'quiz'];
+const TYPE_ORDER: AssignmentType[] = ['homework', 'exercise', 'extra_credit'];
 
 const TYPE_LABELS: Record<AssignmentType, string> = {
-  homework: 'Homework',
-  exercise: 'Exercises',
-  quiz: 'Quizzes',
+  homework:     'Homework',
+  exercise:     'Exercises',
+  quiz:         'Quizzes',
   extra_credit: 'Extra Credit',
 };
 
-function groupByType(assignments: Assignment[]): Record<string, Assignment[]> {
-  const groups: Record<string, Assignment[]> = {};
-  for (const a of assignments) {
-    if (!groups[a.type]) groups[a.type] = [];
-    groups[a.type].push(a);
-  }
-  return groups;
-}
-
 export default function AssignmentsPage() {
-  const all = getAllAssignments();
-  const grouped = groupByType(all);
+  const { assignments } = useAssignments();
 
-  const total = all.length;
-  const done = all.filter(a => a.status === 'completed').length;
+  const grouped = assignments.reduce<Record<string, Assignment[]>>((acc, a) => {
+    if (!acc[a.type]) acc[a.type] = [];
+    acc[a.type].push(a);
+    return acc;
+  }, {});
+
+  const total = assignments.length;
+  const done  = assignments.filter(a => a.status === 'completed').length;
 
   return (
     <div>
-      <Header
-        title="All Assignments"
-        subtitle={`${done} of ${total} complete`}
-      />
+      <Header title="All Assignments" subtitle={`${done} of ${total} complete`} />
 
       {TYPE_ORDER.filter(t => grouped[t]?.length > 0).map(type => {
         const items = grouped[type];
         const typesDone = items.filter(a => a.status === 'completed').length;
-
         return (
           <section key={type} className="mb-10">
             <div className="flex items-center justify-between mb-3">
@@ -48,9 +40,7 @@ export default function AssignmentsPage() {
               <span className="text-xs text-slate-400">{typesDone}/{items.length} done</span>
             </div>
             <div className="space-y-2">
-              {items.map(a => (
-                <AssignmentCard key={a.id} assignment={a} />
-              ))}
+              {items.map(a => <AssignmentCard key={a.id} assignment={a} />)}
             </div>
           </section>
         );

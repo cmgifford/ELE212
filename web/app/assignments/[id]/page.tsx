@@ -1,17 +1,28 @@
+'use client';
+
+import { use } from 'react';
 import { notFound } from 'next/navigation';
-import { getAssignmentById } from '@/lib/db/queries';
+import { useAssignment } from '@/hooks/useAssignments';
 import { AssignmentDetailClient } from './AssignmentDetailClient';
 
-export const dynamic = 'force-dynamic';
-
-export default async function AssignmentDetailPage({
+export default function AssignmentDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
-  const assignment = getAssignmentById(id);
-  if (!assignment) notFound();
+  const { id } = use(params);
+  const { assignment, updateStatus, updateSteps, updateCompletedSteps, updateNotes } =
+    useAssignment(id);
 
-  return <AssignmentDetailClient assignment={assignment} />;
+  if (!assignment) return notFound();
+
+  return (
+    <AssignmentDetailClient
+      assignment={assignment}
+      onStatusChange={status => updateStatus(id, status)}
+      onStepsChange={steps => updateSteps(id, steps)}
+      onCompletedStepsChange={completed => updateCompletedSteps(id, completed)}
+      onNotesChange={notes => updateNotes(id, notes)}
+    />
+  );
 }
