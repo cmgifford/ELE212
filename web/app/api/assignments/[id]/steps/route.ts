@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import rawAssignments from '@/lib/data/assignments.json';
+import { assignments as rawAssignments } from '@/lib/data/assignments';
 import { getAI, AI_MODEL, AI_MAX_TOKENS } from '@/lib/ai/client';
 import { buildBreakdownPrompt } from '@/lib/ai/prompts';
 import type { AssignmentBase } from '@/lib/data/types';
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const assignment = (rawAssignments as AssignmentBase[]).find(a => a.id === id);
+  const assignment = rawAssignments.find(a => a.id === id);
   if (!assignment) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const apiKey = process.env.ANTHROPIC_API_KEY;

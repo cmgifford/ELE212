@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import rawAssignments from '@/lib/data/assignments.json';
+import { assignments as rawAssignments } from '@/lib/data/assignments';
 import {
   getAssignmentState,
   setStatus,
@@ -24,7 +24,7 @@ function hydrate(base: AssignmentBase): Assignment {
 export function useAssignments() {
   const [assignments, setAssignments] = useState<Assignment[]>(
     // Server-safe default — compute status from date only
-    (rawAssignments as AssignmentBase[]).map(a => ({
+    rawAssignments.map(a => ({
       ...a,
       status: computeStatus(a.due_date),
       steps: [],
@@ -36,7 +36,7 @@ export function useAssignments() {
 
   useEffect(() => {
     // Hydrate with localStorage state on the client
-    setAssignments((rawAssignments as AssignmentBase[]).map(hydrate));
+    setAssignments(rawAssignments.map(hydrate));
     setHydrated(true);
   }, []);
 

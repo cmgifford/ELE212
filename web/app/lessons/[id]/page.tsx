@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AIHelpPanel } from '@/components/assignments/AIHelpPanel';
 import { QuizWidget } from '@/components/lessons/QuizWidget';
-import rawLessons from '@/lib/data/lessons.json';
+import { lessons as rawLessons } from '@/lib/data/lessons';
 import type { Lesson } from '@/lib/data/types';
 
 const SECTION_CONCEPTS: Record<string, string[]> = {
@@ -27,7 +27,7 @@ export default function LessonDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const lesson = (rawLessons as Lesson[]).find(l => l.id === id);
+  const lesson = (rawLessons).find(l => l.id === id);
   if (!lesson) return notFound();
 
   const concepts = SECTION_CONCEPTS[lesson.section] ?? [];

@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BookOpen, FileText, Calendar } from 'lucide-react';
 import { clsx } from 'clsx';
-import rawLessons from '@/lib/data/lessons.json';
+import { lessons as rawLessons } from '@/lib/data/lessons';
 import type { Lesson } from '@/lib/data/types';
 
 const SECTION_META: Record<string, { label: string; color: string; description: string }> = {
@@ -20,7 +20,7 @@ const SECTION_META: Record<string, { label: string; color: string; description: 
 };
 
 export default function LessonsPage() {
-  const lessons = rawLessons as Lesson[];
+  const lessons = rawLessons;
   const today = new Date();
 
   const grouped = lessons.reduce<Record<string, Lesson[]>>((acc, l) => {
