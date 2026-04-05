@@ -17,7 +17,24 @@ const CONFUSION_SIGNALS = [
 const OVERWHELM_SIGNALS = [
   "too much", "overwhelming", "so much", "can't do", "cant do",
   "too hard", "give up", "stressed", "freaking out", "panic",
-  "impossible", "don't know where to start", "dont know where to start"
+  "impossible", "don't know where to start", "dont know where to start",
+  "so behind", "never finish", "running out of time", "no time",
+  "too many", "where do i even", "i don't even know"
+];
+
+const FRUSTRATION_SIGNALS = [
+  "ugh", "this sucks", "hate this", "so annoying", "why is this",
+  "forget it", "whatever", "this is stupid", "makes me mad",
+  "so frustrating", "i give up", "done with this", "can't anymore",
+  "this is the worst", "why do i have to"
+];
+
+const SELF_CRITICAL_SIGNALS = [
+  "i'm stupid", "i'm dumb", "im stupid", "im dumb",
+  "i can't do anything", "i'm bad at this", "im bad at this",
+  "i'll never get this", "ill never get this", "everyone else gets it",
+  "i don't belong", "i'm not smart enough", "im not smart enough",
+  "i'm failing", "im failing", "i always mess up", "why am i so"
 ];
 
 const DISENGAGED_SIGNALS: RegExp[] = [
@@ -33,6 +50,12 @@ export function detectStudentState(messages: Message[]): StudentState {
     .map(m => m.content.toLowerCase())
     .join(' ');
 
+  if (SELF_CRITICAL_SIGNALS.some(s => recentUserText.includes(s))) {
+    return 'self_critical';
+  }
+  if (FRUSTRATION_SIGNALS.some(s => recentUserText.includes(s))) {
+    return 'frustrated';
+  }
   if (OVERWHELM_SIGNALS.some(s => recentUserText.includes(s))) {
     return 'overwhelmed';
   }
@@ -59,6 +82,10 @@ export function getReEngagementMessage(state: StudentState): string {
       return "You only need to do one thing. What would be the easiest first step — A: read the question, or B: draw the circuit?";
     case 'disengaged':
       return "Hey — still there? Try this: just tell me the topic you're stuck on in one word.";
+    case 'frustrated':
+      return "Totally fair — this material is genuinely hard. Take a breath. What's the specific part that's frustrating you most?";
+    case 'self_critical':
+      return "Hey — stop right there. Struggling with circuits doesn't mean you're not smart. It means you're learning something hard. What's one thing you DO understand about this so far?";
     default:
       return "Where would you like to start?";
   }
