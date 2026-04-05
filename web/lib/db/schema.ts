@@ -2,7 +2,10 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 
-const DB_DIR = path.join(process.cwd(), 'data');
+// Vercel's filesystem is read-only except /tmp; use that in production
+const DB_DIR = process.env.NODE_ENV === 'production'
+  ? '/tmp/adhd-app'
+  : path.join(process.cwd(), 'data');
 const DB_PATH = path.join(DB_DIR, 'adhd.db');
 
 let db: Database.Database;
