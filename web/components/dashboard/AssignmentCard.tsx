@@ -5,7 +5,7 @@ import { Clock, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { getUrgencyLabel, formatDueDate } from '@/lib/ai/behaviors';
-import type { Assignment } from '@/lib/db/queries';
+import type { Assignment } from '@/lib/data/types';
 import { clsx } from 'clsx';
 
 interface AssignmentCardProps {
@@ -31,8 +31,8 @@ const typeLabels: Record<string, string> = {
 export function AssignmentCard({ assignment, compact = false }: AssignmentCardProps) {
   const urgency = getUrgencyLabel(assignment.due_date);
   const urgencyVariant = urgency.color as 'red' | 'orange' | 'amber' | 'yellow' | 'slate';
-  const stepsArr = JSON.parse(assignment.steps || '[]') as string[];
-  const completedArr = JSON.parse(assignment.completed_steps || '[]') as string[];
+  const stepsArr = assignment.steps;
+  const completedArr = assignment.completed_steps;
   const progress = stepsArr.length > 0 ? Math.round((completedArr.length / stepsArr.length) * 100) : 0;
 
   return (

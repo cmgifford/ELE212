@@ -1,49 +1,55 @@
+'use client';
+
 import { Header } from '@/components/layout/Header';
 import { NextActionCard } from '@/components/dashboard/NextActionCard';
 import { AssignmentCard } from '@/components/dashboard/AssignmentCard';
 import { StatsSummary } from '@/components/dashboard/StatsSummary';
-import {
-  getUpcomingAssignments,
-  getOverdueAssignments,
-  getAssignmentStats,
-  getTodayAssignments,
-} from '@/lib/db/queries';
+import { useAssignments } from '@/hooks/useAssignments';
 import { getTopRecommendation } from '@/lib/ai/behaviors';
 import { AlertCircle, Calendar, Clock } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-
 export default function DashboardPage() {
-  const stats = getAssignmentStats();
-  const overdue = getOverdueAssignments();
-  const upcoming = getUpcomingAssignments(7);
-  const todayItems = getTodayAssignments();
+  const { assignments } = useAssignments();
 
-  const allActionable = [...overdue, ...upcoming];
-  const recommendation = getTopRecommendation(allActionable);
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const in7Days = new Date(today.getTime() + 7 * 86400000).toISOString();
 
-  const today = new Date().toLocaleDateString('en-US', {
+  const overdue = assignments.filter(a => a.status === 'overdue');
+  const todayItems = assignments.filter(a =>
+    a.status !== 'completed' && a.due_date?.startsWith(todayStr)
+  );
+  const upcoming = assignments.filter(a =>
+    a.status === 'upcoming' && a.due_date > todayStr && a.due_date <= in7Days
+  );
+
+  const total = assignments.filter(a => a.type === 'homework').length;
+  const done  = assignments.filter(a => a.type === 'homework' && a.status === 'completed').length;
+
+  const recommendation = getTopRecommendation([...overdue, ...todayItems, ...upcoming]);
+
+  const dateLabel = today.toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric'
   });
 
   return (
     <div>
-      <Header
-        title="Good to see you."
-        subtitle={today}
-      />
+      <Header title="Good to see you." subtitle={dateLabel} />
 
-      {/* Recommended next action */}
       <section className="mb-8">
         <NextActionCard assignment={recommendation} />
       </section>
 
-      {/* Stats summary */}
       <section className="mb-8">
-        <StatsSummary {...stats} />
+        <StatsSummary
+          total={total}
+          done={done}
+          overdue={overdue.length}
+          upcoming={upcoming.length}
+          percent={total > 0 ? Math.round((done / total) * 100) : 0}
+        />
       </section>
 
-      {/* Overdue */}
       {overdue.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-3">
@@ -52,14 +58,11 @@ export default function DashboardPage() {
             <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">{overdue.length}</span>
           </div>
           <div className="space-y-2">
-            {overdue.map(a => (
-              <AssignmentCard key={a.id} assignment={a} compact />
-            ))}
+            {overdue.map(a => <AssignmentCard key={a.id} assignment={a} compact />)}
           </div>
         </section>
       )}
 
-      {/* Due today */}
       {todayItems.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-3">
@@ -67,27 +70,19 @@ export default function DashboardPage() {
             <h2 className="text-sm font-semibold text-slate-700">Due today</h2>
           </div>
           <div className="space-y-2">
-            {todayItems.map(a => (
-              <AssignmentCard key={a.id} assignment={a} compact />
-            ))}
+            {todayItems.map(a => <AssignmentCard key={a.id} assignment={a} compact />)}
           </div>
         </section>
       )}
 
-      {/* This week */}
-      {upcoming.filter(a => a.status !== 'overdue').length > 0 && (
+      {upcoming.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={16} className="text-indigo-500" />
             <h2 className="text-sm font-semibold text-slate-700">This week</h2>
           </div>
           <div className="space-y-2">
-            {upcoming
-              .filter(a => a.status !== 'overdue')
-              .slice(0, 6)
-              .map(a => (
-                <AssignmentCard key={a.id} assignment={a} compact />
-              ))}
+            {upcoming.slice(0, 6).map(a => <AssignmentCard key={a.id} assignment={a} compact />)}
           </div>
         </section>
       )}

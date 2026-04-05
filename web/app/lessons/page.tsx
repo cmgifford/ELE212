@@ -1,12 +1,13 @@
+'use client';
+
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { getAllLessons } from '@/lib/db/queries';
 import { BookOpen, FileText, Calendar } from 'lucide-react';
 import { clsx } from 'clsx';
-
-export const dynamic = 'force-dynamic';
+import rawLessons from '@/lib/data/lessons.json';
+import type { Lesson } from '@/lib/data/types';
 
 const SECTION_META: Record<string, { label: string; color: string; description: string }> = {
   A: { label: 'Basics',    color: 'bg-blue-50 border-blue-200',    description: 'Circuit variables, Kirchhoff, resistors' },
@@ -18,29 +19,23 @@ const SECTION_META: Record<string, { label: string; color: string; description: 
   H: { label: 'Mesh',      color: 'bg-amber-50 border-amber-200',  description: 'Mesh current analysis' },
 };
 
-const TODAY = new Date('2026-04-05');
-
 export default function LessonsPage() {
-  const lessons = getAllLessons();
+  const lessons = rawLessons as Lesson[];
+  const today = new Date();
 
-  // Group by section
-  const grouped: Record<string, typeof lessons> = {};
-  for (const l of lessons) {
-    if (!grouped[l.section]) grouped[l.section] = [];
-    grouped[l.section].push(l);
-  }
+  const grouped = lessons.reduce<Record<string, Lesson[]>>((acc, l) => {
+    if (!acc[l.section]) acc[l.section] = [];
+    acc[l.section].push(l);
+    return acc;
+  }, {});
 
   return (
     <div>
-      <Header
-        title="Lectures"
-        subtitle={`${lessons.length} lectures · ELE 212 Spring 2026`}
-      />
+      <Header title="Lectures" subtitle={`${lessons.length} lectures · ELE 212 Spring 2026`} />
 
       <div className="space-y-8">
         {Object.entries(grouped).map(([section, items]) => {
           const meta = SECTION_META[section] ?? { label: section, color: 'bg-slate-50 border-slate-200', description: '' };
-
           return (
             <section key={section}>
               <div className="flex items-center gap-3 mb-3">
@@ -49,13 +44,11 @@ export default function LessonsPage() {
                 </div>
                 <p className="text-sm text-slate-500">{meta.description}</p>
               </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {items.map(lesson => {
                   const lectureDate = new Date(lesson.date);
-                  const isPast = lectureDate <= TODAY;
-                  const isRecent = isPast && (TODAY.getTime() - lectureDate.getTime()) < 7 * 24 * 60 * 60 * 1000;
-
+                  const isPast = lectureDate <= today;
+                  const isRecent = isPast && (today.getTime() - lectureDate.getTime()) < 7 * 86400000;
                   return (
                     <Link key={lesson.id} href={`/lessons/${lesson.id}`}>
                       <Card hover padding="sm" className={clsx(!isPast && 'opacity-60')}>
@@ -79,8 +72,7 @@ export default function LessonsPage() {
                               </span>
                               {lesson.slides_file && (
                                 <span className="text-xs text-indigo-500 flex items-center gap-1">
-                                  <FileText size={11} />
-                                  Slides
+                                  <FileText size={11} />Slides
                                 </span>
                               )}
                             </div>

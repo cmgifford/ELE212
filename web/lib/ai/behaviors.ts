@@ -122,7 +122,7 @@ export function formatDueDate(dueDate: string | null): string {
   });
 }
 
-import type { Assignment } from '../db/queries';
+import type { Assignment } from '../data/types';
 
 export function getTopRecommendation(assignments: Assignment[]): Assignment | null {
   if (assignments.length === 0) return null;
